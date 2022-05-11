@@ -1,5 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory `/Users/arthur/Documents/interpretas-recorder-client'
-tsc
-make: Leaving directory `/Users/arthur/Documents/interpretas-recorder-client'
- 
