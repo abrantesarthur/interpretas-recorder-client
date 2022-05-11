@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "typescript": "^4.6.4"
+  },
+  "dependencies": {
+    "node-record-lpcm16": "^1.0.1"
   }
 }
