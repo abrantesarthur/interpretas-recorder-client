@@ -1,7 +1,25 @@
+'use strict';
+
+// load configuration variables from .env file
+require('dotenv').config();
+
+import axios_ = require('axios');
+const axios = axios_.default;
+
 // Allow user input from terminal
 import readline = require('readline');
 // Node-Record-lpcm16
 const recorder = require('node-record-lpcm16');
+
+// initiate http client
+const port = Number(process.env.PORT);
+const hostname = process.env.HOSTNAME;
+const httpClient = axios.create({
+    baseURL: `http://${hostname}:${port}`,
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
 
 function recordFromMicrophone() {
   const sampleRateHertz = 16000;
@@ -19,16 +37,15 @@ function recordFromMicrophone() {
   recording
     .stream()
     .on('data', (chunk: any) => {
-      console.log(chunk.toString('base64'));
+      // send recording to server
+      httpClient.post("/channel", JSON.stringify({recording: chunk.toString('base64')})
+    ).then(response => {
+        console.log(response.data);
+      })
     })
     .on('close', () => {
       doTranslationLoop();
     });
-
-  // stop recording after 3 seconds
-   setTimeout(() => {
-    recording.stop();
-  }, 3000);
 }
 
 function doTranslationLoop() {

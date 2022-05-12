@@ -1,24 +1,22 @@
-"use strict";
+'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+// load configuration variables from .env file
+require('dotenv').config();
+const axios_ = require("axios");
+const axios = axios_.default;
 // Allow user input from terminal
 const readline = require("readline");
 // Node-Record-lpcm16
 const recorder = require('node-record-lpcm16');
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
+// initiate http client
+const port = Number(process.env.PORT);
+const hostname = process.env.HOSTNAME;
+const httpClient = axios.create({
+    baseURL: `http://${hostname}:${port}`,
+    headers: {
+        "Content-Type": "application/json",
+    }
 });
-function doTranslationLoop() {
-    rl.question("Press any key to translate or 'q' to quit: ", answer => {
-        if (answer.toLowerCase() === 'q') {
-            rl.close();
-            recordFromMicrophone();
-        }
-        else {
-            recordFromMicrophone();
-        }
-    });
-}
 function recordFromMicrophone() {
     const sampleRateHertz = 16000;
     console.log("Begin speaking...");
@@ -33,14 +31,27 @@ function recordFromMicrophone() {
     recording
         .stream()
         .on('data', (chunk) => {
-        console.log(chunk.toString('base64'));
+        // send recording to server
+        httpClient.post("/channel", JSON.stringify({ recording: chunk.toString('base64') })).then(response => {
+            console.log(response.data);
+        });
     })
         .on('close', () => {
         doTranslationLoop();
     });
-    // stop recording after 3 seconds
-    setTimeout(() => {
-        recording.stop();
-    }, 3000);
+}
+function doTranslationLoop() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+    rl.question("Press any key to translate or 'q' to quit: ", answer => {
+        if (answer.toLowerCase() === 'q') {
+            rl.close();
+        }
+        else {
+            recordFromMicrophone();
+        }
+    });
 }
 doTranslationLoop();
