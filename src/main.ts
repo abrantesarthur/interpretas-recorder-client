@@ -13,23 +13,24 @@ import { recordFromMicrophone } from './record';
 // ================== MAIN ===================== //
 
 async function main() {
-  // start recording
+  //  read/write to/from terminal
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
 
-  let socket = await socketConnect("test@test.com", "password", "ch");
+  let socket = await socketConnect("test@test.com", "password", "Commencement");
 
   rl.question("Press any key to translate or 'q' to quit: ", answer => {
 
     if (!socket || answer.toLowerCase() === 'q') {
       rl.close();
     } else {
+
       // start recording
       const recordingStream = recordFromMicrophone();
 
-      // listen for audio and send it to server
+      // transmit audio data to server
       recordingStream.on('data', (chunk: any) => {
         let str: string = chunk.toString('base64');
         // if(socket.connected) {

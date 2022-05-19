@@ -1,7 +1,7 @@
 .PHONY: build run
 
-build: src/index.ts tsconfig.json
+build: src/main.ts tsconfig.json
 	tsc
 
 run: build
-	node dist/index.js
+	node dist/main.js

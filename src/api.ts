@@ -16,8 +16,8 @@ const signin :
   let res = await httpClient.post(
     "/login",
     JSON.stringify({
-      email: "test@test.com",
-      password: "password",
+      email: email,
+      password: password,
     })
   );
 
