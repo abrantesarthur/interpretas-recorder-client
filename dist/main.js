@@ -14,7 +14,9 @@ require('dotenv').config();
 // ====================== IMPORTS ============================ //
 // terminal io
 const readline = require("readline");
-const http_1 = require("./http");
+// socket
+const socket_1 = require("./socket");
+// microphone recorder
 const record_1 = require("./record");
 // ================== MAIN ===================== //
 function main() {
@@ -24,34 +26,41 @@ function main() {
             input: process.stdin,
             output: process.stdout,
         });
-        let socket = yield (0, http_1.socketConnect)("test@test.com", "password", "Commencement");
-        rl.question("Press any key to translate or 'q' to quit: ", answer => {
-            if (!socket || answer.toLowerCase() === 'q') {
-                rl.close();
-            }
-            else {
-                // start recording
-                const recordingStream = (0, record_1.recordFromMicrophone)();
-                // transmit audio data to server
-                recordingStream.on('data', (chunk) => {
-                    let str = chunk.toString('base64');
-                    // if(socket.connected) {
-                    //   socket.emit("audioContent", {
-                    //     audio_content: chunk.toString('base64')
-                    //   });
-                    // }
-                });
-                // on error, try again
-                recordingStream.on('error', (e) => {
-                    console.log("error");
-                });
-                // try to reconnedt if the server disconnected explicitly
-                socket.on("disconnect", (reason) => __awaiter(this, void 0, void 0, function* () {
-                    if (reason === "io server disconnect") {
-                        socket = yield (0, http_1.socketConnect)("test@test.com", "password", "ch");
-                    }
-                }));
-            }
+        // establish a socket connection with the server, using the credentials
+        let socket = yield (0, socket_1.socketConnect)("test@test.com", "password", "Commencement");
+        // TODO: handle disconnection
+        // // try to reconnedt if the server disconnected explicitly
+        // socket.on("disconnect", async (reason) => {
+        //   console.log("user disconnected. try again")
+        //   if(reason === "io server disconnect") {
+        //     let newSocket = connect(baseURL, chId, res.cookie);
+        //     if(newSocket != null) {
+        //       socket = newSocket;
+        //     }
+        //   }
+        // })
+        // socket is succesfully connected for the purposes of this application]
+        // only after the server sends the custom 'connected' event
+        socket === null || socket === void 0 ? void 0 : socket.on("connected", (_) => {
+            rl.question("Press any key to translate or 'q' to quit: ", answer => {
+                if (!socket || answer.toLowerCase() === 'q') {
+                    rl.close();
+                }
+                else {
+                    // start recording
+                    const recordingStream = (0, record_1.recordFromMicrophone)();
+                    // transmit audio data to server
+                    recordingStream.on('data', (chunk) => {
+                        if (socket != null && socket.connected) {
+                            socket.emit("audioContent", chunk.toString('base64'));
+                        }
+                    });
+                    // on error, try again
+                    recordingStream.on('error', (e) => {
+                        console.log("error");
+                    });
+                }
+            });
         });
     });
 }

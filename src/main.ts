@@ -7,7 +7,9 @@ require('dotenv').config();
 
 // terminal io
 import readline = require('readline');
+// socket
 import { socketConnect } from './socket';
+// microphone recorder
 import { recordFromMicrophone } from './record';
 
 // ================== MAIN ===================== //
@@ -19,42 +21,53 @@ async function main() {
     output: process.stdout,
   });
 
+  // establish a socket connection with the server, using the credentials
   let socket = await socketConnect("test@test.com", "password", "Commencement");
 
-  rl.question("Press any key to translate or 'q' to quit: ", answer => {
+  // TODO: handle disconnection
+  // // try to reconnedt if the server disconnected explicitly
+  // socket.on("disconnect", async (reason) => {
+  //   console.log("user disconnected. try again")
+  //   if(reason === "io server disconnect") {
+  //     let newSocket = connect(baseURL, chId, res.cookie);
+  //     if(newSocket != null) {
+  //       socket = newSocket;
+  //     }
+  //   }
+  // })
 
-    if (!socket || answer.toLowerCase() === 'q') {
-      rl.close();
-    } else {
+  // socket is succesfully connected for the purposes of this application]
+  // only after the server sends the custom 'connected' event
+  socket?.on("connected", (_) => {
+    rl.question("Press any key to translate or 'q' to quit: ", answer => {
 
-      // start recording
-      const recordingStream = recordFromMicrophone();
+      if (!socket || answer.toLowerCase() === 'q') {
+        rl.close();
+      } else {
+        
+  
+        // start recording
+        const recordingStream = recordFromMicrophone();
+  
+  
+        // transmit audio data to server
+        recordingStream.on('data', (chunk: any) => {
+          if(socket != null && socket.connected) {
+            socket.emit("audioContent", chunk.toString('base64'));
+          }
+        })
+  
+        // on error, try again
+        recordingStream.on('error', (e) => {
+          console.log("error");
+        })
+  
+      }
+    });
+  })
+  
 
-      // transmit audio data to server
-      recordingStream.on('data', (chunk: any) => {
-        let str: string = chunk.toString('base64');
-        // if(socket.connected) {
-        //   socket.emit("audioContent", {
-        //     audio_content: chunk.toString('base64')
-        //   });
-        // }
-      })
-
-      // on error, try again
-      recordingStream.on('error', (e) => {
-        console.log("error");
-      })
-
-
-      // try to reconnedt if the server disconnected explicitly
-      socket.on("disconnect", async (reason) => {
-        if(reason === "io server disconnect") {
-          socket = await socketConnect("test@test.com", "password", "ch");
-        }
-      })
-
-    }
-  });
+  
 }
 
 main();
