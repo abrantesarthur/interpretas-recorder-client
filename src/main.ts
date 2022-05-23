@@ -64,6 +64,10 @@ async function main() {
   
       }
     });
+
+    socket?.on("received audio content", (_) => {
+      console.log("audio content was received");
+    })
   })
   
 

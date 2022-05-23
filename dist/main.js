@@ -61,6 +61,9 @@ function main() {
                     });
                 }
             });
+            socket === null || socket === void 0 ? void 0 : socket.on("received audio content", (_) => {
+                console.log("audio content was received");
+            });
         });
     });
 }
