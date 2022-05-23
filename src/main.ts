@@ -7,7 +7,7 @@ require('dotenv').config();
 
 // terminal io
 import readline = require('readline');
-import { socketConnect } from './http';
+import { socketConnect } from './socket';
 import { recordFromMicrophone } from './record';
 
 // ================== MAIN ===================== //
