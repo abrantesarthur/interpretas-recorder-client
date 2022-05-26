@@ -57,6 +57,7 @@ async function main() {
         // transmit audio data to server
         recordingStream.on('data', (chunk: any) => {
           if(socket != null && socket.connected) {
+            printf("sent recording...")
             socket.emit("audioContent", chunk.toString('base64'));
           }
         })
