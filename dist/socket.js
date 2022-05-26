@@ -32,7 +32,6 @@ const connect = (baseURL, channelId, cookie) => {
 // socketConnect()
 //  connect to the server via socket.io and return the socket connection  
 const socketConnect = (email, password, channelName) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("socketConnect authenticating...");
     // authenticate to the server and get session cookie
     const res = yield (0, api_1.signin)(email, password);
     console.log("socketConnect getting channels...");

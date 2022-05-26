@@ -7,22 +7,29 @@ require('dotenv').config();
 
 // terminal io
 import readline = require('readline');
+import { ask, printf, close } from './readline';
 // socket
 import { socketConnect } from './socket';
 // microphone recorder
 import { recordFromMicrophone } from './record';
+import { write } from 'fs';
 
 // ================== MAIN ===================== //
 
 async function main() {
-  //  read/write to/from terminal
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+
+  printf("Welcome to Interpretas Recording Client...\n");
+  printf("To begin broadcasting your events, you must log into your account...\n");
+  
+  const email = await ask("Enter your email address: ");
+  const password = await ask("Enter your password: ");
+  const channel = await ask("Enter your channel name: ");
+
+  printf("Wait while we connect you...\n");
+
 
   // establish a socket connection with the server, using the credentials
-  let socket = await socketConnect("test@test.com", "password", "Commencement");
+  let socket = await socketConnect(email, password, channel);
 
   // TODO: handle disconnection
   // // try to reconnedt if the server disconnected explicitly
@@ -36,42 +43,34 @@ async function main() {
   //   }
   // })
 
-  // socket is succesfully connected for the purposes of this application]
+  // socket is succesfully connected for the purposes of this application
   // only after the server sends the custom 'connected' event
-  socket?.on("connected", (_) => {
-    rl.question("Press any key to translate or 'q' to quit: ", answer => {
+  socket?.on("connected", async (_) => {
+    const answer = await ask("Press any key to translate or 'q' to quit: ");
 
       if (!socket || answer.toLowerCase() === 'q') {
-        rl.close();
+        close();
       } else {
-        
-  
         // start recording
         const recordingStream = recordFromMicrophone();
-  
-  
+
         // transmit audio data to server
         recordingStream.on('data', (chunk: any) => {
           if(socket != null && socket.connected) {
             socket.emit("audioContent", chunk.toString('base64'));
           }
         })
-  
+
         // on error, try again
         recordingStream.on('error', (e) => {
           console.log("error");
         })
-  
       }
-    });
 
-    socket?.on("received audio content", (_) => {
-      console.log("audio content was received");
+    socket?.on("translatedAudioContent", (data) => {
+      console.log(data);
     })
   })
-  
-
-  
 }
 
 main();
