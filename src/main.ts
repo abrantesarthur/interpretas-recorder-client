@@ -66,10 +66,6 @@ async function main() {
           console.log("error");
         })
       }
-
-    socket?.on("translatedAudioContent", (data) => {
-      console.log(data);
-    })
   })
 }
 
