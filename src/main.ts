@@ -54,10 +54,15 @@ async function main() {
         // start recording
         const recordingStream = recordFromMicrophone();
 
+        let requestsSent = 0;
+
         // transmit audio data to server
         recordingStream.on('data', (chunk: any) => {
           if(socket != null && socket.connected) {
-            printf("sent recording...")
+            requestsSent++;
+            if(requestsSent % 10 === 0) {
+              console.log(requestsSent +  " requests sent...");
+            }
             socket.emit("audioContent", chunk.toString('base64'));
           }
         })

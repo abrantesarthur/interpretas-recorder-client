@@ -48,9 +48,14 @@ function main() {
             else {
                 // start recording
                 const recordingStream = (0, record_1.recordFromMicrophone)();
+                let requestsSent = 0;
                 // transmit audio data to server
                 recordingStream.on('data', (chunk) => {
                     if (socket != null && socket.connected) {
+                        requestsSent++;
+                        if (requestsSent % 10 === 0) {
+                            console.log(requestsSent + " requests sent...");
+                        }
                         socket.emit("audioContent", chunk.toString('base64'));
                     }
                 });
@@ -59,9 +64,6 @@ function main() {
                     console.log("error");
                 });
             }
-            socket === null || socket === void 0 ? void 0 : socket.on("translatedAudioContent", (data) => {
-                console.log(data);
-            });
         }));
     });
 }

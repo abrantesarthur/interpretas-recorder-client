@@ -14,6 +14,7 @@ exports.socketConnect = void 0;
 const socket_io_client_1 = require("socket.io-client");
 const api_1 = require("./api");
 const http_1 = require("./http");
+const readline_1 = require("./readline");
 // ================= CONFIGURE SOCKET CLIENT ======================== //
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -34,10 +35,8 @@ const connect = (baseURL, channelId, cookie) => {
 const socketConnect = (email, password, channelName) => __awaiter(void 0, void 0, void 0, function* () {
     // authenticate to the server and get session cookie
     const res = yield (0, api_1.signin)(email, password);
-    console.log("socketConnect getting channels...");
     // get this user's channels
     let chs = yield (0, api_1.getChannels)(res.radioHost.id);
-    console.log(chs);
     // get id of channelname
     let chId = "";
     chs.forEach((ch) => {
@@ -47,20 +46,18 @@ const socketConnect = (email, password, channelName) => __awaiter(void 0, void 0
     });
     // abort if not found
     if (chId.length === 0) {
-        console.log("socketConnect could not find channel '" + channelName + "'...");
+        (0, readline_1.printf)("Could not find channel '" + channelName + "'...");
         return null;
     }
-    console.log("socketConnect connecting to channel '" + channelName + "'...");
     // connect to the channel through socket, using the authentication credentials
     let socket = connect(http_1.baseURL, chId, res.cookie);
     // wait up to 1s for socket to connect
     let ms = 0;
     while (socket.disconnected) {
-        console.log("wait");
         yield delay(1);
         // give up at 1000ms
         if (ms === 1000) {
-            console.log("give up");
+            (0, readline_1.printf)("Failed to connect to the server. Try again.");
             socket.disconnect();
             return null;
         }
