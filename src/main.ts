@@ -6,13 +6,11 @@ require('dotenv').config();
 // ====================== IMPORTS ============================ //
 
 // terminal io
-import readline = require('readline');
 import { ask, printf, close } from './readline';
 // socket
 import { socketConnect } from './socket';
 // microphone recorder
 import { recordFromMicrophone } from './record';
-import { write } from 'fs';
 
 // ================== MAIN ===================== //
 
@@ -31,18 +29,6 @@ async function main() {
   // establish a socket connection with the server, using the credentials
   let socket = await socketConnect(email, password, channel);
 
-  // TODO: handle disconnection
-  // // try to reconnedt if the server disconnected explicitly
-  // socket.on("disconnect", async (reason) => {
-  //   console.log("user disconnected. try again")
-  //   if(reason === "io server disconnect") {
-  //     let newSocket = connect(baseURL, chId, res.cookie);
-  //     if(newSocket != null) {
-  //       socket = newSocket;
-  //     }
-  //   }
-  // })
-
   // socket is succesfully connected for the purposes of this application
   // only after the server sends the custom 'connected' event
   socket?.on("connected", async (_) => {
@@ -56,23 +42,28 @@ async function main() {
 
         let requestsSent = 0;
 
-        // transmit audio data to server
+        // when record data, transmit it to server
         recordingStream.on('data', (chunk: any) => {
+          // if still connected to server, send recording
           if(socket != null && socket.connected) {
             requestsSent++;
-            if(requestsSent % 10 === 0) {
+            if(requestsSent % 20 === 0) {
               console.log(requestsSent +  " requests sent...");
             }
             socket.emit("audioContent", chunk.toString('base64'));
+          } else {
+            // if no longer connected to server, stop recordign
+            recordingStream.removeAllListeners();
           }
-        })
-
-        // on error, try again
-        recordingStream.on('error', (e) => {
-          console.log("error");
         })
       }
   })
+
+  // quit if the server disconnected explicitly
+  socket?.on("disconnect", async (_) => {
+    close();
+  })
+  
 }
 
 main();
